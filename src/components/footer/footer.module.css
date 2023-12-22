@@ -5,14 +5,3 @@
   align-items: center;
   justify-content: space-between;
 }
-
-.social {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.icon {
-  opacity: 0.6;
-  cursor: pointer;
-}
