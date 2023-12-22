@@ -4,7 +4,6 @@ import styles from './page.module.css'
 import useSWR from 'swr'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 
 export default function Dashboard() {
   const session = useSession()
@@ -28,8 +27,7 @@ export default function Dashboard() {
     e.preventDefault()
     const title = e.target[0].value
     const desc = e.target[1].value
-    const img = e.target[2].value
-    const content = e.target[3].value
+    const content = e.target[2].value
 
     try {
       await fetch('/api/posts', {
@@ -37,7 +35,6 @@ export default function Dashboard() {
         body: JSON.stringify({
           title,
           desc,
-          img,
           content,
           username: session.data.user.name
         })
@@ -68,9 +65,6 @@ export default function Dashboard() {
             ? 'loading'
             : data?.map(post => (
                 <div className={styles.post} key={post._id}>
-                  <div className={styles.imgContainer}>
-                    <Image src={post.img} alt='' width={200} height={100} />
-                  </div>
                   <h2 className={styles.postTitle}>{post.title}</h2>
                   <span className={styles.delete} onClick={() => handleDelete(post._id)}>
                     X
@@ -82,7 +76,6 @@ export default function Dashboard() {
           <h1>Add New Post</h1>
           <input type='text' placeholder='Title' className={styles.input} />
           <input type='text' placeholder='Desc' className={styles.input} />
-          <input type='text' placeholder='Image' className={styles.input} />
           <textarea
             placeholder='Content'
             className={styles.textArea}
