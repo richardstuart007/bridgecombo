@@ -8,12 +8,16 @@ export default function CreateDatabase(dbSize) {
   //  Session Storage
   //
   store()
+  //
+  //  Return value
+  //
+  return allDecks
   // --------------------------------------------------------------------------------
   // Create shuffled Decks array
   // --------------------------------------------------------------------------------
   function allDecksCreate() {
     for (let deckNum = 0; deckNum < dbSize; deckNum++) {
-      if (deckNum % 100000 === 0) console.log(`Start Deck ${deckNum}:`)
+      // if (deckNum % 100000 === 0) console.log(`Start Deck ${deckNum}:`)
 
       const deck_in = [
         'S02',
