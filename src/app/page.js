@@ -1,37 +1,56 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import styles from './page.module.css'
 import CreateDatabase from '@/components/CreateDatabase/CreateDatabase'
-let allDecks = []
+let decksDb = []
+let decksDbFilter = []
+//
+// Saved Filter values
+//
+let objFilters = {
+  hcphand1: 0,
+  hcphand2: 40,
+  hcpsuit1: 0,
+  hcpsuit2: 10
+}
 export default function Home() {
   const [dbSize, setDbSize] = useState('')
-  const [hcp1, setHcp1] = useState('')
-  const [hcp2, setHcp2] = useState('')
-  const [message1, setMessage1] = useState('')
-  const [message2, setMessage2] = useState('')
-
+  const [messagedbsize, setMessagedbsize] = useState('')
+  const [messagefilter, setMessagefilter] = useState('')
+  //
+  //  First time load saved values
+  //
+  useEffect(() => {
+    //
+    //  Restore the dbSize parameter
+    //
+    let json = sessionStorage.getItem('dbSize')
+    if (json) setDbSize(JSON.parse(json))
+    //
+    //  Filters (if any)
+    //
+    const objFiltersJSON = sessionStorage.getItem('objFilters')
+    objFiltersJSON
+      ? (objFilters = JSON.parse(objFiltersJSON))
+      : sessionStorage.setItem('objFilters', JSON.stringify(objFilters))
+    //
+    //  Set the status
+    //
+    if (decksDb.length > 0) setMessagedbsize('Created')
+    // eslint-disable-next-line
+  }, [])
+  //-------------------------------------------------------------------------------
   const handleCreateDatabase = () => {
-    setMessage1('Loading')
-    allDecks = CreateDatabase(dbSize)
-    setMessage1('Created')
-    // console.log(allDecks)
+    setMessagedbsize('Loading...')
+    decksDb = CreateDatabase(dbSize)
+    setMessagedbsize('Created')
   }
-
+  //-------------------------------------------------------------------------------
   const HandleInput_dbSize = event => {
     const value = event.target.value
-    const numeric = validateRange(setMessage1, 1, 500000, value)
+    const numeric = validateRange(setMessagedbsize, 1, 500000, value)
     setDbSize(numeric)
-  }
-
-  const HandleInput_hcp1 = event => {
-    const value = event.target.value
-    const numeric = validateRange(setMessage2, 0, 40, value)
-    setHcp1(numeric)
-  }
-  const HandleInput_hcp2 = event => {
-    const value = event.target.value
-    const numeric = validateRange(setMessage2, 0, 40, value)
-    setHcp2(numeric)
+    sessionStorage.setItem('dbSize', JSON.stringify(numeric))
   }
   //-------------------------------------------------------------------------------
   function validateRange(msgFunction, min, max, value) {
@@ -53,21 +72,77 @@ export default function Home() {
     return numeric
   }
   //-------------------------------------------------------------------------------
-  function handleCreateFilter() {
-    let hcp_pass = 0
-
-    let hcp_tests = 0
-    for (let deckNum = 0; deckNum < allDecks.length; deckNum++) {
-      for (let handNum = 0; handNum < 4; handNum++) {
-        hcp_tests++
-        const value = allDecks[deckNum][handNum].hand_hcp
-        if (value >= hcp1 && value <= hcp2) hcp_pass++
-      }
-    }
-    const percent = ((hcp_pass / hcp_tests) * 100).toFixed(0)
-
-    setMessage2(`${percent}%`)
+  function handleFilter() {
+    const handNum = 0
+    const suitNum = 0
+    setMessagefilter(`Calculating...`)
+    decksDbFilter = decksDb.filter(function (deck) {
+      //
+      //  Hand HCP check
+      //
+      const hand = deck[handNum]
+      const hand_hcp = hand.hand_hcp
+      if (hand_hcp < objFilters.hcphand1 || hand_hcp > objFilters.hcphand2) return null
+      //
+      //  Suit HCP check (pass any)
+      //
+      const card_hcp = hand.suits[suitNum].cards_hcp
+      if (card_hcp < objFilters.hcpsuit1 || card_hcp > objFilters.hcpsuit2) return null
+      //
+      //  Filter return
+      //
+      return deck
+    })
+    //
+    //Save first part of database
+    //
+    const sampleNum = 30
+    let sampleFilter
+    decksDbFilter.length < sampleNum
+      ? (sampleFilter = decksDbFilter)
+      : (sampleFilter = decksDbFilter.slice(0, sampleNum))
+    sessionStorage.setItem('sampleFilter', JSON.stringify(sampleFilter))
+    //
+    //  Calculate percentage
+    //
+    const percent = ((decksDbFilter.length / decksDb.length) * 100).toFixed(1)
+    setMessagefilter(`${percent}%`)
   }
+  // //-------------------------------------------------------------------------------
+  // function handleFilterhcphand() {
+  //   let hcp_pass = 0
+  //   let hcp_tests = 0
+  //   for (let deckNum = 0; deckNum < decksDb.length; deckNum++) {
+  //     for (let handNum = 0; handNum < 4; handNum++) {
+  //       hcp_tests++
+  //       const value = decksDb[deckNum][handNum].hand_hcp
+  //       if (value >= objFilters.hcphand1 && value <= objFilters.hcphand2) {
+  //         hcp_pass++
+  //       }
+  //     }
+  //   }
+  //   const percent = ((hcp_pass / hcp_tests) * 100).toFixed(1)
+
+  //   setMessagehcphand(`${percent}%`)
+  // }
+  // //-------------------------------------------------------------------------------
+  // function handleFilterhcpsuit() {
+  //   let hcpsuit_pass = 0
+  //   let hcpsuit_tests = 0
+  //   for (let deckNum = 0; deckNum < decksDb.length; deckNum++) {
+  //     for (let handNum = 0; handNum < 4; handNum++) {
+  //       for (let suitNum = 0; suitNum < 4; suitNum++) {
+  //         hcpsuit_tests++
+  //         const hand = decksDb[deckNum][handNum]
+  //         const value = hand.suits[suitNum].cards_hcp
+  //         if (value >= objFilters.hcpsuit1 && value <= objFilters.hcpsuit2) hcpsuit_pass++
+  //       }
+  //     }
+  //   }
+  //   const percent = ((hcpsuit_pass / hcpsuit_tests) * 100).toFixed(1)
+
+  //   setMessagehcpsuit(`${percent}%`)
+  // }
   //-------------------------------------------------------------------------------
   return (
     <>
@@ -88,7 +163,7 @@ export default function Home() {
           />
         </div>
         <div className={styles.item}>
-          <p style={{ color: 'red' }}>{message1}</p>
+          <p style={{ color: 'red' }}>{messagedbsize}</p>
         </div>
 
         <div className={styles.item}>
@@ -100,37 +175,30 @@ export default function Home() {
 
       <div className={styles.container}>
         <div className={styles.item}>
-          <h1 className={styles.title}>Hand</h1>
+          <h1 className={styles.title}>Hand hcp</h1>
         </div>
+        <div className={styles.item}>
+          <h1 className={styles.title}>{`${objFilters.hcphand1} to ${objFilters.hcphand2}`}</h1>
+        </div>
+      </div>
 
+      <div className={styles.container}>
         <div className={styles.item}>
-          <input
-            className={styles.integer}
-            type='text'
-            inputMode='numeric'
-            pattern='[0-9]*'
-            id='hcp1'
-            value={hcp1}
-            onChange={HandleInput_hcp1}
-          />
+          <h1 className={styles.title}>Suit hcp</h1>
         </div>
         <div className={styles.item}>
-          <input
-            className={styles.integer}
-            type='text'
-            inputMode='numeric'
-            pattern='[0-9]*'
-            id='hcp2'
-            value={hcp2}
-            onChange={HandleInput_hcp2}
-          />
+          <h1 className={styles.title}>{`${objFilters.hcpsuit1} to ${objFilters.hcpsuit2}`}</h1>
         </div>
-        <div className={styles.item}>
-          <p style={{ color: 'red' }}>{message2}</p>
-        </div>
+      </div>
 
+      <div className={styles.container}>
+        <div className={styles.item}></div>
+        <div></div>
+        <div>
+          <p style={{ color: 'red' }}>{messagefilter}</p>
+        </div>
         <div className={styles.item}>
-          <button className={styles.button} onClick={handleCreateFilter}>
+          <button className={styles.button} onClick={handleFilter}>
             Filter
           </button>
         </div>

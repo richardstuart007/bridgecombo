@@ -9,6 +9,12 @@ const links = [
     id: 1,
     title: 'Home',
     url: '/'
+  },
+
+  {
+    id: 2,
+    title: 'Filters',
+    url: '/Filters'
   }
 ]
 

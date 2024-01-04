@@ -88,7 +88,6 @@ export default function CreateDatabase(dbSize) {
       deckSplit(deck_shuffled, deckNum)
     }
   }
-
   // --------------------------------------------------------------------------------
   // Shuffle deck
   // --------------------------------------------------------------------------------
@@ -140,13 +139,15 @@ export default function CreateDatabase(dbSize) {
       //
       //  High Card Points
       //
-      let cardValue = parseInt(hand[cardNum].substring(1)) - 10
+      const card = hand[cardNum]
+      const cardid = parseInt(card.substring(1))
+      let cardValue = cardid - 10
       if (cardValue < 0) cardValue = 0
       objHand.hand_hcp = objHand.hand_hcp + cardValue
       //
       //  Suit count
       //
-      const cardSuit = hand[cardNum].substring(0, 1)
+      const cardSuit = card.substring(0, 1)
       let suitNum
       cardSuit === 'S'
         ? (suitNum = 0)
@@ -158,7 +159,7 @@ export default function CreateDatabase(dbSize) {
       //
       //  Populate the suits
       //
-      objHand.suits[suitNum].cards.push(hand[cardNum])
+      objHand.suits[suitNum].cards.push(cardid)
       objHand.suits[suitNum].cards_cnt++
       objHand.suits[suitNum].cards_hcp = objHand.suits[suitNum].cards_hcp + cardValue
     }
@@ -201,7 +202,7 @@ export default function CreateDatabase(dbSize) {
     //
     //Save first part of database
     //
-    const sampleNum = 300
+    const sampleNum = 30
     let sampleDecks
     dbSize < sampleNum ? (sampleDecks = allDecks) : (sampleDecks = allDecks.slice(0, sampleNum))
     sessionStorage.setItem('sampleDecks', JSON.stringify(sampleDecks))
