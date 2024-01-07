@@ -10,11 +10,10 @@ const links = [
     title: 'Home',
     url: '/'
   },
-
   {
     id: 2,
-    title: 'Filters',
-    url: '/Filters'
+    title: 'Hand',
+    url: '/Hand'
   }
 ]
 

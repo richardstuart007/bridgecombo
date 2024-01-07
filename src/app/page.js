@@ -2,17 +2,11 @@
 import React, { useState, useEffect } from 'react'
 import styles from './page.module.css'
 import CreateDatabase from '@/components/CreateDatabase/CreateDatabase'
+import DisplayFilters from '@/components/DisplayFilters/DisplayFilters'
 let decksDb = []
 let decksDbFilter = []
-//
-// Saved Filter values
-//
-let objFilters = {
-  hcphand1: 0,
-  hcphand2: 40,
-  hcpsuit1: 0,
-  hcpsuit2: 10
-}
+let handfilters
+
 export default function Home() {
   const [dbSize, setDbSize] = useState('')
   const [messagedbsize, setMessagedbsize] = useState('')
@@ -29,16 +23,46 @@ export default function Home() {
     //
     //  Filters (if any)
     //
-    const objFiltersJSON = sessionStorage.getItem('objFilters')
-    objFiltersJSON
-      ? (objFilters = JSON.parse(objFiltersJSON))
-      : sessionStorage.setItem('objFilters', JSON.stringify(objFilters))
+    const handfiltersJSON = sessionStorage.getItem('handfilters')
+    handfiltersJSON ? (handfilters = JSON.parse(handfiltersJSON)) : CreateDefaultFilters()
     //
     //  Set the status
     //
     if (decksDb.length > 0) setMessagedbsize('Created')
     // eslint-disable-next-line
   }, [])
+  // --------------------------------------------------------------------------------
+  // Create Default Filters
+  // --------------------------------------------------------------------------------
+  function CreateDefaultFilters() {
+    //
+    //  Suits
+    //
+    const objSuits = {
+      hcpsuitF: 0,
+      hcpsuitT: 10
+    }
+    const suits = []
+    for (let suitNum = 0; suitNum < 4; suitNum++) {
+      suits[suitNum] = objSuits
+    }
+    //
+    //  Hands
+    //
+    const objHand = {
+      hcphandF: 0,
+      hcphandT: 40,
+      suits: suits
+    }
+    handfilters = []
+    for (let handNum = 0; handNum < 4; handNum++) {
+      handfilters[handNum] = objHand
+    }
+    //
+    //  Save
+    //
+    sessionStorage.setItem('handfilters', JSON.stringify(handfilters))
+  }
   //-------------------------------------------------------------------------------
   const handleCreateDatabase = () => {
     setMessagedbsize('Loading...')
@@ -73,21 +97,34 @@ export default function Home() {
   }
   //-------------------------------------------------------------------------------
   function handleFilter() {
-    const handNum = 0
-    const suitNum = 0
     setMessagefilter(`Calculating...`)
+
     decksDbFilter = decksDb.filter(function (deck) {
-      //
-      //  Hand HCP check
-      //
-      const hand = deck[handNum]
-      const hand_hcp = hand.hand_hcp
-      if (hand_hcp < objFilters.hcphand1 || hand_hcp > objFilters.hcphand2) return null
-      //
-      //  Suit HCP check (pass any)
-      //
-      const card_hcp = hand.suits[suitNum].cards_hcp
-      if (card_hcp < objFilters.hcpsuit1 || card_hcp > objFilters.hcpsuit2) return null
+      for (let handNum = 0; handNum < 4; handNum++) {
+        //
+        //  Hand
+        //
+        const hand = deck[handNum]
+        //
+        //  Hand HCP check
+        //
+        const hand_hcp = hand.hand_hcp
+
+        if (hand_hcp < handfilters[handNum].hcphandF || hand_hcp > handfilters[handNum].hcphandT)
+          return null
+        //
+        //  Suit HCP check
+        //
+        for (let suitNum = 0; suitNum < 4; suitNum++) {
+          const card_hcp = hand.suits[suitNum].cards_hcp
+
+          if (
+            card_hcp < handfilters[handNum].suits[suitNum].hcpsuitF ||
+            card_hcp > handfilters[handNum].suits[suitNum].hcpsuitT
+          )
+            return null
+        }
+      }
       //
       //  Filter return
       //
@@ -108,41 +145,6 @@ export default function Home() {
     const percent = ((decksDbFilter.length / decksDb.length) * 100).toFixed(1)
     setMessagefilter(`${percent}%`)
   }
-  // //-------------------------------------------------------------------------------
-  // function handleFilterhcphand() {
-  //   let hcp_pass = 0
-  //   let hcp_tests = 0
-  //   for (let deckNum = 0; deckNum < decksDb.length; deckNum++) {
-  //     for (let handNum = 0; handNum < 4; handNum++) {
-  //       hcp_tests++
-  //       const value = decksDb[deckNum][handNum].hand_hcp
-  //       if (value >= objFilters.hcphand1 && value <= objFilters.hcphand2) {
-  //         hcp_pass++
-  //       }
-  //     }
-  //   }
-  //   const percent = ((hcp_pass / hcp_tests) * 100).toFixed(1)
-
-  //   setMessagehcphand(`${percent}%`)
-  // }
-  // //-------------------------------------------------------------------------------
-  // function handleFilterhcpsuit() {
-  //   let hcpsuit_pass = 0
-  //   let hcpsuit_tests = 0
-  //   for (let deckNum = 0; deckNum < decksDb.length; deckNum++) {
-  //     for (let handNum = 0; handNum < 4; handNum++) {
-  //       for (let suitNum = 0; suitNum < 4; suitNum++) {
-  //         hcpsuit_tests++
-  //         const hand = decksDb[deckNum][handNum]
-  //         const value = hand.suits[suitNum].cards_hcp
-  //         if (value >= objFilters.hcpsuit1 && value <= objFilters.hcpsuit2) hcpsuit_pass++
-  //       }
-  //     }
-  //   }
-  //   const percent = ((hcpsuit_pass / hcpsuit_tests) * 100).toFixed(1)
-
-  //   setMessagehcpsuit(`${percent}%`)
-  // }
   //-------------------------------------------------------------------------------
   return (
     <>
@@ -173,23 +175,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className={styles.container}>
-        <div className={styles.item}>
-          <h1 className={styles.title}>Hand hcp</h1>
-        </div>
-        <div className={styles.item}>
-          <h1 className={styles.title}>{`${objFilters.hcphand1} to ${objFilters.hcphand2}`}</h1>
-        </div>
-      </div>
-
-      <div className={styles.container}>
-        <div className={styles.item}>
-          <h1 className={styles.title}>Suit hcp</h1>
-        </div>
-        <div className={styles.item}>
-          <h1 className={styles.title}>{`${objFilters.hcpsuit1} to ${objFilters.hcpsuit2}`}</h1>
-        </div>
-      </div>
+      <DisplayFilters></DisplayFilters>
 
       <div className={styles.container}>
         <div className={styles.item}></div>

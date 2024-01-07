@@ -129,10 +129,6 @@ export default function CreateDatabase(dbSize) {
     //
     const objHand = CreateHandObj()
     //
-    //  Populate the hand array
-    //
-    objHand.hand = hand
-    //
     //  Process each card
     //
     for (let cardNum = 0; cardNum < hand.length; cardNum++) {
@@ -176,7 +172,6 @@ export default function CreateDatabase(dbSize) {
     //  Define the Hand Object
     //
     const objHand = {
-      hand: [],
       hand_hcp: 0,
       suits: []
     }
